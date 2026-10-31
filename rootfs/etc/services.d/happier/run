@@ -1,0 +1,16 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+# The Happier daemon: registers this machine with your account and starts
+# Claude sessions when you ask for one from the Happier app.
+exec 2>&1
+
+STATUS="$(/app/happier.sh auth status --json 2>/dev/null || true)"
+if [[ -z "${STATUS}" ]] || jq -e '.ok == false and .error.code == "not_authenticated"' <<<"${STATUS}" >/dev/null 2>&1; then
+  bashio::log.warning "Happier is not connected yet. Open this add-on's Web UI and click Connect."
+  sleep 15
+  exit 1
+fi
+
+cd /root || exit 1
+bashio::log.info "Starting the Happier daemon."
+exec /app/happier.sh daemon start-sync

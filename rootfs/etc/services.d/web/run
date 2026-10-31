@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+# Setup and status page, served through Home Assistant ingress.
+exec 2>&1
+exec node /app/server.js

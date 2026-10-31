@@ -1,0 +1,5 @@
+#!/usr/bin/env bashio
+# shellcheck shell=bash
+if [[ "${1:-0}" -ne 0 && "${1:-0}" -ne 256 ]]; then
+  bashio::log.warning "Setup page exited with code ${1}; restarting."
+fi

@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+
+# Runtime credentials this add-on generates. They belong on the add-on's
+# /data volume or in the container's /root, never in this repo — ignored here
+# so a local test run can't commit one by accident.
+.env
+.env.*
+.mcp.json
+.claude/
+.claude.json
+.credentials.json
+*.pem
+*.key

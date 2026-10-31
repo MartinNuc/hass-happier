@@ -1,0 +1,94 @@
+# Happier Claude — Home Assistant Add-on
+
+Runs [Claude Code](https://claude.ai/code) on your Home Assistant host and lets
+you drive it from the [Happier](https://happier.dev) app on your phone or in a
+browser. Claude gets Home Assistant's **own** MCP server, plus read-write
+access to your config directory.
+
+```
+Happier app ──▶ Happier relay ──▶ Happier daemon (this add-on) ──▶ claude
+                                                                    ├─ MCP ─▶ HA /api/mcp
+                                                                    └─ files ─▶ /homeassistant
+```
+
+Setup happens on one page in the add-on's **Web UI** tab. You don't need a terminal.
+
+## What you need
+
+| | |
+|---|---|
+| Home Assistant OS or Supervised | Add-ons don't run on Container/Core installs |
+| A Happier account | The free Happier Cloud, or your own relay |
+| A Claude Pro/Max subscription | Connected once in Happier, see step 3 |
+
+## Setup
+
+### 1. Home Assistant MCP server
+
+1. **Settings → Devices & services → Add integration → Model Context Protocol Server.**
+   The defaults are fine: *Expose all LLM APIs* on, *Require an administrator account* on.
+   The add-on signs in as the Supervisor user, which is an administrator.
+   Turn on *read-only* if Claude should be able to look but never change anything.
+2. **Settings → Voice assistants → Expose.** Pick the entities Claude may see
+   and control. It can't reach any entity that isn't on this list.
+
+You don't need a long-lived access token. The add-on reaches the MCP server through
+the Supervisor with its own token.
+
+### 2. Install the add-on
+
+**Settings → Add-ons → Add-on Store → ⋮ → Repositories**, add
+`https://github.com/MartinNuc/hass-happier`, install **Happier Claude**, start it.
+If you added the MCP integration after starting the add-on, restart the add-on.
+
+### 3. Connect, from the add-on's Web UI
+
+- **Happier.** Click **Connect Happier** and scan the QR code with the Happier
+  app, or approve it in the browser. The daemon starts by itself.
+- **Claude.** Your Claude subscription lives in Happier, not in the add-on.
+  On a computer where Claude Code is logged in, run `claude setup-token`. Then in
+  the Happier app go to **Settings → Connected services → Claude**, paste the
+  token and make it the default. If that computer has the Happier CLI,
+  `happier connect claude` does both steps. The page turns green once Happier reports
+  the connection.
+- **Home Assistant tools.** This turns green when step 1 worked.
+
+Then, in the Happier app, start a new session, pick this machine, and keep
+**connected** auth for Claude.
+
+## Options
+
+| Option | Default | |
+|---|---|---|
+| Happier relay URL | blank = Happier Cloud | Your own relay. The add-on container must be able to reach it. |
+| Happier web app URL | same as relay | Only for relays whose web app lives at a different URL |
+
+## What Claude can do
+
+- **Entities:** through HA's MCP server (intent tools, live context and
+  scripts), and only for exposed entities.
+- **Config:** read-write at `/homeassistant`. Keep it in git.
+- **HA REST API:** via `http://supervisor/core/api/…`, for things like config checks
+  and reloads. The session's `CLAUDE.md` explains how.
+
+What it can't do: edit automations through an API, read history, or
+reach unexposed entities through MCP. Those are limits of HA's built-in server,
+not of this add-on.
+
+## Security
+
+- The container runs as root, and the session has a shell and write access to your HA
+  config. Whoever controls your Happier account controls this.
+- Sessions run as root, so Claude Code refuses the "YOLO" (bypass
+  permissions) mode. Use Default or Safe YOLO.
+- Nothing is exposed on your LAN. The setup page answers only HA ingress.
+- Secrets live only on the add-on's volume (`/data`), never in the image.
+
+## Troubleshooting
+
+- **The log repeats "Happier is not connected yet"**: finish step 3.
+- **"The Happier relay did not answer"**: check the relay URL. A tailnet-only
+  relay (`*.ts.net`) is often unreachable from inside an add-on container,
+  even with the Tailscale add-on installed.
+- **Claude says it has no Home Assistant tools**: the third card on the page,
+  or the add-on log line `Home Assistant MCP server reachable at …`.

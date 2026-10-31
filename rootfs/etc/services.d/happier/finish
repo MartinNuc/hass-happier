@@ -1,0 +1,7 @@
+#!/usr/bin/env bashio
+# shellcheck shell=bash
+# s6 restarts the service after this returns. Exit code 1 with no log line
+# above it is the "not connected yet" wait loop, not a crash.
+if [[ "${1:-0}" -ne 0 && "${1:-0}" -ne 1 && "${1:-0}" -ne 256 ]]; then
+  bashio::log.warning "Happier daemon exited with code ${1}; restarting."
+fi

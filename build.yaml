@@ -1,0 +1,10 @@
+# Debian, not Alpine: the Happier CLI is a Bun-compiled glibc binary and its
+# installer ships no musl build.
+build_from:
+  amd64: ghcr.io/home-assistant/amd64-base-debian:bookworm
+  aarch64: ghcr.io/home-assistant/aarch64-base-debian:bookworm
+
+labels:
+  org.opencontainers.image.title: "Happier Claude"
+  org.opencontainers.image.description: "Claude Code driven from the Happier app, with Home Assistant's MCP server"
+  org.opencontainers.image.source: "https://github.com/MartinNuc/hass-happier"

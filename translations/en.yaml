@@ -1,0 +1,11 @@
+configuration:
+  relay_url:
+    name: Happier relay URL
+    description: >-
+      Leave blank for Happier Cloud. Set it only if you run your own Happier
+      relay, and it must be reachable from inside this add-on.
+  webapp_url:
+    name: Happier web app URL
+    description: >-
+      Only with a self-hosted relay whose web app lives at a different URL.
+      Blank means the same as the relay URL.

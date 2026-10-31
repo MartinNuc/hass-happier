@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Happier Claude</title>
+<style>
+  :root { color-scheme: light dark; --ok: #2e7d32; --warn: #b26a00; --bad: #c62828; --muted: #888; }
+  body { font: 15px/1.5 system-ui, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: var(--muted); margin-top: 0; }
+  .card { border: 1px solid #8884; border-radius: 12px; padding: 16px 20px; margin: 16px 0; }
+  .card h2 { font-size: 17px; margin: 0 0 8px; display: flex; gap: 10px; align-items: center; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+  button, a.btn { font: inherit; padding: 8px 16px; border-radius: 8px; border: 0; background: #03a9f4; color: #fff;
+                  cursor: pointer; text-decoration: none; display: inline-block; }
+  button.secondary { background: #8883; color: inherit; }
+  .qr { width: 220px; height: 220px; background: #fff; padding: 8px; border-radius: 8px; margin: 12px 0; }
+  .qr svg { width: 100%; height: 100%; }
+  ol { padding-left: 20px; } li { margin: 4px 0; }
+  code { background: #8882; padding: 1px 5px; border-radius: 4px; }
+  .err { color: var(--bad); }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>Happier Claude</h1>
+<p class="sub">Claude Code on this Home Assistant host, driven from the Happier app.</p>
+
+<div class="card" id="happier"></div>
+<div class="card" id="claude"></div>
+<div class="card" id="mcp"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const head = (cls, title) => `<h2><span class="dot ${cls}"></span>${title}</h2>`;
+
+async function api(path, method = 'GET') {
+  const r = await fetch(path, { method });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+function renderHappier(s) {
+  const h = s.happier, p = s.pairing;
+  if (h.state === 'connected') {
+    return head('ok', '1. Happier — connected') +
+      `<p>Account <b>${esc(h.account ?? 'unknown')}</b> on <code>${esc(h.relay)}</code>.
+       Daemon ${h.daemonRunning ? 'running' : '<span class="muted">starting…</span>'}.</p>
+       <p class="muted">In the Happier app, start a new session and pick this machine.</p>`;
+  }
+  if (p?.status === 'waiting') {
+    return head('warn', '1. Happier — waiting for approval') +
+      `<p>Scan this with the Happier app on your phone:</p>
+       ${p.qrSvg ? `<div class="qr">${p.qrSvg}</div>` : ''}
+       ${p.webUrl ? `<p>Or approve in the browser: <a class="btn" href="${esc(p.webUrl)}" target="_blank" rel="noopener">Open Happier</a></p>` : ''}
+       <button class="secondary" onclick="act('api/pair/cancel')">Cancel</button>`;
+  }
+  if (p?.status === 'starting') return head('warn', '1. Happier — creating pairing request…');
+  if (p?.status === 'done') return head('warn', '1. Happier — approved, starting daemon…');
+  const relayDown = h.state === 'relay_unreachable';
+  return head(relayDown ? 'bad' : '', '1. Happier — not connected') +
+    (relayDown ? `<p class="err">The Happier relay did not answer. Check the relay URL in the add-on configuration.</p>` : '') +
+    (p?.status === 'error' ? `<p class="err">${esc(p.error)}</p>` : '') +
+    `<p>Connect this Home Assistant host to your Happier account.</p>
+     <button onclick="act('api/pair')">Connect Happier</button>`;
+}
+
+function renderClaude(s) {
+  const steps = `<ol>
+      <li>On a computer where Claude Code is logged in, run <code>claude setup-token</code>.</li>
+      <li>In the Happier app: <b>Settings → Connected services → Claude</b>, paste the token, make it the default.</li>
+      <li>When starting a session on this machine, keep <b>connected</b> auth for Claude.</li>
+    </ol>
+    <p class="muted">Already have the Happier CLI on that computer? <code>happier connect claude</code> does steps 1–2.</p>`;
+  if (s.happier.state !== 'connected') return head('', '2. Claude — connect Happier first') + steps;
+  if (s.claude === true) {
+    return head('ok', '2. Claude — provided by Happier') +
+      `<p>Your Claude subscription is stored in Happier and is handed to each session. Nothing to log in to here.</p>`;
+  }
+  return head('warn', '2. Claude — not connected in Happier') + steps +
+    `<button class="secondary" onclick="act('api/refresh')">Check again</button>`;
+}
+
+function renderMcp(s) {
+  const m = s.mcp;
+  if (m.ok) {
+    return head('ok', '3. Home Assistant tools — reachable') +
+      `<p>Claude uses Home Assistant's MCP server at <code>${esc(m.url)}</code>.
+       It can see and control only entities under <b>Settings → Voice assistants → Expose</b>.</p>`;
+  }
+  return head('bad', '3. Home Assistant tools — not available') +
+    `<p>Home Assistant's MCP server did not answer (HTTP ${esc(m.http)}).</p>
+     <ol>
+       <li><b>Settings → Devices &amp; services → Add integration → Model Context Protocol Server</b>.</li>
+       <li><b>Settings → Voice assistants → Expose</b>: choose the entities Claude may use.</li>
+       <li>Restart this add-on.</li>
+     </ol>`;
+}
+
+let last = null;
+function render(s) {
+  last = s;
+  $('happier').innerHTML = renderHappier(s);
+  $('claude').innerHTML = renderClaude(s);
+  $('mcp').innerHTML = renderMcp(s);
+}
+
+async function act(path) {
+  try { render(await api(path, 'POST')); } catch (e) { console.error(e); }
+}
+
+async function poll() {
+  try { render(await api('api/status')); } catch (e) { console.error(e); }
+  setTimeout(poll, last?.pairing?.status === 'waiting' ? 2000 : 5000);
+}
+poll();
+</script>
+</body>
+</html>

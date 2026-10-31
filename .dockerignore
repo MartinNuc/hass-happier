@@ -1,0 +1,15 @@
+# Keep the build context to what the Dockerfile needs. In particular, local
+# node_modules (built for the dev machine) and any credential file from a
+# local test run must never end up in the image.
+.git
+**/node_modules
+**/.DS_Store
+**/.env
+**/.env.*
+**/.mcp.json
+**/.claude
+**/.claude.json
+**/.credentials.json
+**/*.pem
+**/*.key
+app/test
