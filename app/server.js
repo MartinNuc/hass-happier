@@ -8,12 +8,12 @@
 
 import http from 'node:http';
 import { execFile, spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import QRCode from 'qrcode';
 import {
   parseJsonOutput,
   summarizeAuthStatus,
-  parseClaudeConnection,
   isIngressAddress,
 } from './lib.js';
 
@@ -78,9 +78,8 @@ function firstLine(s) {
   return String(s ?? '').trim().split('\n').find(Boolean)?.slice(0, 300) ?? '';
 }
 
-// ── Status, cached briefly: the page polls and both calls hit the relay ────
+// ── Status, cached briefly: the page polls and auth status hits the relay ──
 let authCache = null;
-let claudeCache = null;
 const CACHE_MS = 5000;
 
 async function authStatus() {
@@ -91,13 +90,6 @@ async function authStatus() {
   return value;
 }
 
-async function claudeConnected() {
-  if (claudeCache && Date.now() - claudeCache.at < CACHE_MS * 3) return claudeCache.value;
-  const res = await run(['connect', 'status']);
-  const value = parseClaudeConnection(res.stdout + '\n' + res.stderr);
-  claudeCache = { at: Date.now(), value };
-  return value;
-}
 
 async function mcpStatus() {
   try {
@@ -107,9 +99,23 @@ async function mcpStatus() {
   }
 }
 
+// A `/login` run from a Happier terminal on this machine stores Claude's
+// credentials under CLAUDE_CONFIG_DIR, on the persistent volume. Only the
+// file's existence is checked; its contents are never read.
+const CLAUDE_CREDENTIALS = join(process.env.CLAUDE_CONFIG_DIR ?? '/data/claude', '.credentials.json');
+
+async function claudeNativeLogin() {
+  try {
+    await access(CLAUDE_CREDENTIALS);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function status() {
   const happier = await authStatus();
-  const claude = happier.state === 'connected' ? await claudeConnected() : null;
+  const claude = { nativeLogin: await claudeNativeLogin() };
   const { child, ...pairingPublic } = pairing ?? {};
   return { happier, claude, mcp: await mcpStatus(), pairing: pairing ? pairingPublic : null };
 }
@@ -141,7 +147,6 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && path === '/api/refresh') {
       authCache = null;
-      claudeCache = null;
       return send(res, 200, await status());
     }
     return send(res, 404, { error: 'not found' });

@@ -21,16 +21,20 @@ Tests: `cd app && npm test` (pure helpers only).
 ## Settled decisions
 
 - **Debian base image.** Happier is a Bun-compiled glibc binary.
-- **Claude auth comes from Happier Connected Services** (`claude-subscription`,
-  setup-token). The daemon materialises it per session as
-  `CLAUDE_CODE_OAUTH_TOKEN` in an isolated home. There is deliberately no
-  `claude auth login` path in the add-on.
+- **Claude auth is a native login done once from Happier.** The user runs
+  `/login` in a terminal Happier opens on this machine; Claude stores it in
+  `CLAUDE_CONFIG_DIR=/data/claude/.credentials.json` on the persistent volume.
+  The add-on itself has no login UI for Claude; the setup page only checks
+  that the file exists, never reads it. Happier Connected Services would also
+  work (it builds a separate config dir per session and writes credentials
+  there), but the app did not surface it, so it is not the documented path.
 - **HA MCP through the Supervisor proxy with `SUPERVISOR_TOKEN`.** Prefers
   `/api/mcp` (all selected LLM APIs, admin-gated, Supervisor user is admin),
   falls back to `/api/mcp/assist`. Written both as project scope
   (`/root/.mcp.json` + `enableAllProjectMcpServers`) and user scope
-  (`/data/claude/.claude.json`), because the isolated home Happier builds for
-  connected auth may not carry `.claude.json` over.
+  (`/data/claude/.claude.json`), so sessions started in another directory
+  get it too, and the project file still works if Happier ever substitutes
+  its own config dir.
 - **Relay via prefix-only flags** (`--server-url`/`--webapp-url`) in
   `app/happier.sh`, never persisted, so changing the option takes effect on
   restart with no stale profile.
@@ -47,16 +51,15 @@ Tests: `cd app && npm test` (pure helpers only).
 ## Assumptions not yet verified on real hardware
 
 - The Happier linux-arm64/x64 release runs on Debian bookworm.
-- A daemon-spawned session with connected auth runs with no native Claude login.
+- The `/login` credentials survive an add-on restart and update.
 - The session picks up the HA MCP server from project or user scope.
-- `happier connect status` prints `Anthropic Claude: <state>` (parsed in lib.js).
 
 ## Secrets — this repo is public
 
 - No credential is ever committed or baked into the image. The add-on reads
   them only at runtime: `SUPERVISOR_TOKEN` from the Supervisor, Happier
-  credentials from `/data/happier` (written by pairing), Claude auth from
-  Happier per session.
+  credentials from `/data/happier` (written by pairing), Claude credentials
+  from `/data/claude` (written by `/login`).
 - Files that hold a token are created with `install -m 600` *before* content
   is written, and live in `/root` (rebuilt every start) or `/data`.
 - Never log a token, URL header or `auth wait` output. Setup and the page

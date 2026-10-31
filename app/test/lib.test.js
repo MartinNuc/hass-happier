@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseJsonOutput, summarizeAuthStatus, parseClaudeConnection, isIngressAddress } from '../lib.js';
+import { parseJsonOutput, summarizeAuthStatus, isIngressAddress } from '../lib.js';
 
 test('parseJsonOutput reads plain and log-prefixed JSON', () => {
   assert.deepEqual(parseJsonOutput('{"a":1}'), { a: 1 });
@@ -23,13 +23,6 @@ test('summarizeAuthStatus maps the auth_status envelope', () => {
   assert.equal(ok.account, 'me');
   assert.equal(ok.daemonRunning, false);
   assert.equal(summarizeAuthStatus(null).state, 'unknown');
-});
-
-test('parseClaudeConnection reads `happier connect status` text', () => {
-  const out = '\nConnection status\n\n  •  Google Antigravity: not connected\n  •  Anthropic Claude: not connected\n';
-  assert.equal(parseClaudeConnection(out), false);
-  assert.equal(parseClaudeConnection('  •  \x1b[32mAnthropic Claude: connected (default)\x1b[0m'), true);
-  assert.equal(parseClaudeConnection('nothing relevant'), null);
 });
 
 test('isIngressAddress only allows the Supervisor ingress proxy', () => {

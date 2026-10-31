@@ -37,16 +37,6 @@ export function summarizeAuthStatus(json) {
   return { state: 'unknown' };
 }
 
-// `happier connect status` has no JSON mode; it prints lines such as
-//   •  Anthropic Claude: not connected
-// Returns true / false, or null when the line is absent.
-export function parseClaudeConnection(text) {
-  const plain = String(text ?? '').replace(/\x1b\[[0-9;]*m/g, '');
-  const m = plain.match(/Anthropic Claude:\s*(.+)/);
-  if (!m) return null;
-  return !/not connected/i.test(m[1]);
-}
-
 // Supervisor ingress always connects from this address. Anything else is
 // another container on the hassio network and is refused.
 const INGRESS_ADDRESSES = new Set(['172.30.32.2', '::ffff:172.30.32.2']);

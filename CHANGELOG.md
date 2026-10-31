@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2
+
+The setup page now recognises the Claude login you do from Happier.
+
+- Log in to Claude once: in the Happier app, open a terminal on this machine
+  and run `/login`. The login is kept across restarts and updates.
+- The page's Claude step describes that flow, and turns green once you've
+  logged in.
+
 ## 0.1.1
 
 Fixes sessions failing to start with "Claude Code process exited with code 1".

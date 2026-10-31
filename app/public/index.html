@@ -69,18 +69,19 @@ function renderHappier(s) {
 }
 
 function renderClaude(s) {
-  const steps = `<ol>
-      <li>On a computer where Claude Code is logged in, run <code>claude setup-token</code>.</li>
-      <li>In the Happier app: <b>Settings → Connected services → Claude</b>, paste the token, make it the default.</li>
-      <li>When starting a session on this machine, keep <b>connected</b> auth for Claude.</li>
-    </ol>
-    <p class="muted">Already have the Happier CLI on that computer? <code>happier connect claude</code> does steps 1–2.</p>`;
-  if (s.happier.state !== 'connected') return head('', '2. Claude — connect Happier first') + steps;
-  if (s.claude === true) {
-    return head('ok', '2. Claude — provided by Happier') +
-      `<p>Your Claude subscription is stored in Happier and is handed to each session. Nothing to log in to here.</p>`;
+  const c = s.claude ?? {};
+  if (c.nativeLogin) {
+    return head('ok', '2. Claude — logged in') +
+      `<p>Claude's login is stored on this add-on's volume and survives restarts and updates.</p>`;
   }
-  return head('warn', '2. Claude — not connected in Happier') + steps +
+  const steps = `<ol>
+      <li>In the Happier app, start a session on this machine.</li>
+      <li>When it reports that Claude is not logged in, use Happier's option to log in.
+          It opens a terminal on this machine.</li>
+      <li>Run <code>/login</code> there and finish the sign-in.</li>
+    </ol>`;
+  if (s.happier.state !== 'connected') return head('', '2. Claude — connect Happier first') + steps;
+  return head('warn', '2. Claude — not logged in') + steps +
     `<button class="secondary" onclick="act('api/refresh')">Check again</button>`;
 }
 

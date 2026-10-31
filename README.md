@@ -19,7 +19,7 @@ Setup happens on one page in the add-on's **Web UI** tab. You don't need a termi
 |---|---|
 | Home Assistant OS or Supervised | Add-ons don't run on Container/Core installs |
 | A Happier account | The free Happier Cloud, or your own relay |
-| A Claude Pro/Max subscription | Connected once in Happier, see step 3 |
+| A Claude Pro/Max subscription | You log in once, from the Happier app, see step 3 |
 
 ## Setup
 
@@ -45,16 +45,12 @@ If you added the MCP integration after starting the add-on, restart the add-on.
 
 - **Happier.** Click **Connect Happier** and scan the QR code with the Happier
   app, or approve it in the browser. The daemon starts by itself.
-- **Claude.** Your Claude subscription lives in Happier, not in the add-on.
-  On a computer where Claude Code is logged in, run `claude setup-token`. Then in
-  the Happier app go to **Settings → Connected services → Claude**, paste the
-  token and make it the default. If that computer has the Happier CLI,
-  `happier connect claude` does both steps. The page turns green once Happier reports
-  the connection.
+- **Claude.** In the Happier app, start a session on this machine. When it
+  says Claude is not logged in, use Happier's option to log in: it opens a
+  terminal on this machine. Run `/login` there and finish the sign-in. The
+  login is stored on the add-on's volume (`/data/claude`), so you do this once.
+  It survives restarts and updates.
 - **Home Assistant tools.** This turns green when step 1 worked.
-
-Then, in the Happier app, start a new session, pick this machine, and keep
-**connected** auth for Claude.
 
 ## Options
 
@@ -90,6 +86,8 @@ not of this add-on.
 ## Troubleshooting
 
 - **The log repeats "Happier is not connected yet"**: finish step 3.
+- **"Not logged in · Please run /login"**: Claude's login is missing. Do the
+  Claude part of step 3.
 - **"The Happier relay did not answer"**: check the relay URL. A tailnet-only
   relay (`*.ts.net`) is often unreachable from inside an add-on container,
   even with the Tailscale add-on installed.

@@ -1,5 +1,5 @@
 name: "Happier Claude"
-version: "0.1.1"
+version: "0.1.2"
 slug: "happier-claude"
 description: "Claude Code on your Home Assistant host, driven from the Happier app, with Home Assistant's own MCP server."
 url: "https://github.com/MartinNuc/hass-happier"
