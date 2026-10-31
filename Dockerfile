@@ -5,7 +5,7 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      ca-certificates curl git jq nodejs npm procps tzdata \
+      ca-certificates curl git jq nodejs npm procps tmux tzdata \
  && rm -rf /var/lib/apt/lists/*
 
 # ── Happier CLI ──────────────────────────────────────────────────────────────

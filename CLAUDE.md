@@ -37,6 +37,12 @@ Tests: `cd app && npm test` (pure helpers only).
 - **CLIs pinned to the image.** `DISABLE_AUTOUPDATER=1`,
   `HAPPIER_CLI_UPDATE_CHECK=0`. Update by bumping the add-on.
 - **cont-init never exits non-zero.** That halts the container.
+- **`IS_SANDBOX=1` on the daemon** (`services.d/happier/run`). Happier always
+  passes `--allow-dangerously-skip-permissions`, which Claude Code refuses
+  under root without it; Happier forwards `IS_SANDBOX` to Claude on purpose.
+  Approved by the owner knowing YOLO mode then runs as root in the container.
+  Running sessions as a non-root user was the alternative, rejected because
+  `/homeassistant` is root-owned and would need its permissions changed.
 
 ## Assumptions not yet verified on real hardware
 

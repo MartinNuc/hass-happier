@@ -79,8 +79,11 @@ not of this add-on.
 
 - The container runs as root, and the session has a shell and write access to your HA
   config. Whoever controls your Happier account controls this.
-- Sessions run as root, so Claude Code refuses the "YOLO" (bypass
-  permissions) mode. Use Default or Safe YOLO.
+- Sessions run as root inside the container, which the add-on declares a
+  sandbox (`IS_SANDBOX=1`) so Claude Code will start under Happier. The
+  permission mode is still yours per session: in **YOLO** Claude runs every
+  command without asking, with root access to your HA config, the add-on's
+  `/data` and the Supervisor API. Default or Safe YOLO keep approvals on.
 - Nothing is exposed on your LAN. The setup page answers only HA ingress.
 - Secrets live only on the add-on's volume (`/data`), never in the image.
 

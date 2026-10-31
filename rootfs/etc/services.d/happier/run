@@ -12,5 +12,15 @@ if [[ -z "${STATUS}" ]] || jq -e '.ok == false and .error.code == "not_authentic
 fi
 
 cd /root || exit 1
+
+# Happier always starts Claude with --allow-dangerously-skip-permissions, and
+# Claude Code refuses that flag under root unless IS_SANDBOX=1. The add-on
+# container is uid 0, so without this every session exits with code 1.
+# Happier forwards IS_SANDBOX from the daemon's environment to Claude for
+# exactly this case. The declaration is accurate: this container is the
+# sandbox, reaching only /homeassistant, /data and the Supervisor API. The
+# permission mode is still chosen per session in the Happier app.
+export IS_SANDBOX=1
+
 bashio::log.info "Starting the Happier daemon."
 exec /app/happier.sh daemon start-sync
