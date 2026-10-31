@@ -21,7 +21,14 @@ Tests: `cd app && npm test` (pure helpers only).
 ## Settled decisions
 
 - **Debian base image.** Happier is a Bun-compiled glibc binary.
-- **Claude auth is a native login done once from Happier.** The user runs
+- **Claude auth: a token option, or a native `/login`.** The optional
+  `claude_token` option (schema `password?`) holds a `claude setup-token`
+  token. Only `services.d/happier/run` reads it, and it exports
+  `CLAUDE_CODE_OAUTH_TOKEN` to the daemon. Happier forwards `CLAUDE_*` env
+  to every Claude child (`buildClaudeSubprocessEnv` allows the prefix;
+  only the refresh-token keys are denied). Claude Code prefers it over
+  stored credentials. cont-init leaves a presence-only marker for the page.
+  Without a token: the native login done once from Happier. The user runs
   `/login` in a terminal Happier opens on this machine; Claude stores it in
   `CLAUDE_CONFIG_DIR=/data/claude/.credentials.json` on the persistent volume.
   The add-on itself has no login UI for Claude; the setup page only checks
@@ -59,7 +66,9 @@ Tests: `cd app && npm test` (pure helpers only).
 - No credential is ever committed or baked into the image. The add-on reads
   them only at runtime: `SUPERVISOR_TOKEN` from the Supervisor, Happier
   credentials from `/data/happier` (written by pairing), Claude credentials
-  from `/data/claude` (written by `/login`).
+  from `/data/claude` (written by `/login`) or the `claude_token` option.
+- The Claude token goes from the add-on options to the daemon's environment
+  and nowhere else: not in a file, not on a command line, not in a log line.
 - Files that hold a token are created with `install -m 600` *before* content
   is written, and live in `/root` (rebuilt every start) or `/data`.
 - Never log a token, URL header or `auth wait` output. Setup and the page

@@ -70,11 +70,23 @@ function renderHappier(s) {
 
 function renderClaude(s) {
   const c = s.claude ?? {};
+  if (c.token) {
+    return head('ok', '2. Claude — token from the add-on configuration') +
+      `<p>Every session uses the Claude token set in this add-on's <b>Configuration</b> tab.
+       It lasts about a year; when it expires, generate a new one and replace it.</p>`;
+  }
   if (c.nativeLogin) {
     return head('ok', '2. Claude — logged in') +
       `<p>Claude's login is stored on this add-on's volume and survives restarts and updates.</p>`;
   }
-  const steps = `<ol>
+  const steps = `<p>Pick one:</p>
+    <p><b>A token in the add-on configuration</b> (no terminal):</p>
+    <ol>
+      <li>On any computer where Claude Code is logged in, run <code>claude setup-token</code>.</li>
+      <li>Paste the token into this add-on's <b>Configuration → Claude token</b>, save, and restart the add-on.</li>
+    </ol>
+    <p><b>Or <code>/login</code> from Happier:</b></p>
+    <ol>
       <li>In the Happier app, start a session on this machine.</li>
       <li>When it reports that Claude is not logged in, use Happier's option to log in.
           It opens a terminal on this machine.</li>

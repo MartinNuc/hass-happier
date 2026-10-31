@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0
+
+Log in to Claude from the Home Assistant UI, with no terminal.
+
+- New option **Claude token**. Run `claude setup-token` on any computer where
+  Claude Code is logged in, paste the token here, save and restart. It lasts
+  about a year.
+- The `/login` from a Happier terminal keeps working. If both are set, the
+  token wins.
+- The token is stored in the add-on's options, so it is part of Home
+  Assistant backups.
+
 ## 0.1.2
 
 The setup page now recognises the Claude login you do from Happier.

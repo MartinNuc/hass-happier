@@ -1,5 +1,5 @@
 name: "Happier Claude"
-version: "0.1.2"
+version: "0.2.0"
 slug: "happier-claude"
 description: "Claude Code on your Home Assistant host, driven from the Happier app, with Home Assistant's own MCP server."
 url: "https://github.com/MartinNuc/hass-happier"
@@ -26,9 +26,13 @@ map:
   - homeassistant_config:rw
 
 options:
+  claude_token: ""
   relay_url: ""
   webapp_url: ""
 
+# claude_token is a `password` field: masked in the UI. It is stored in the
+# add-on's options and therefore in Home Assistant backups.
 schema:
+  claude_token: password?
   relay_url: str?
   webapp_url: str?

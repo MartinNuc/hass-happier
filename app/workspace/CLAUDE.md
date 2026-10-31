@@ -27,4 +27,5 @@ instance.
 
 - Check the config is valid before reloading or restarting anything.
 - If `/homeassistant` is a git repo, commit a checkpoint before larger edits.
-- Never print the Supervisor token or write it into `/homeassistant`.
+- Never print the Supervisor token or `CLAUDE_CODE_OAUTH_TOKEN`, and never
+  write either into `/homeassistant`.

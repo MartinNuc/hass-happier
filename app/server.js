@@ -104,9 +104,12 @@ async function mcpStatus() {
 // file's existence is checked; its contents are never read.
 const CLAUDE_CREDENTIALS = join(process.env.CLAUDE_CONFIG_DIR ?? '/data/claude', '.credentials.json');
 
-async function claudeNativeLogin() {
+// Presence-only marker from 10-setup.sh. This process never sees the token.
+const CLAUDE_TOKEN_MARKER = '/run/happier/claude_token_configured';
+
+async function exists(path) {
   try {
-    await access(CLAUDE_CREDENTIALS);
+    await access(path);
     return true;
   } catch {
     return false;
@@ -115,7 +118,10 @@ async function claudeNativeLogin() {
 
 async function status() {
   const happier = await authStatus();
-  const claude = { nativeLogin: await claudeNativeLogin() };
+  const claude = {
+    token: await exists(CLAUDE_TOKEN_MARKER),
+    nativeLogin: await exists(CLAUDE_CREDENTIALS),
+  };
   const { child, ...pairingPublic } = pairing ?? {};
   return { happier, claude, mcp: await mcpStatus(), pairing: pairing ? pairingPublic : null };
 }

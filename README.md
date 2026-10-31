@@ -19,7 +19,7 @@ Setup happens on one page in the add-on's **Web UI** tab. You don't need a termi
 |---|---|
 | Home Assistant OS or Supervised | Add-ons don't run on Container/Core installs |
 | A Happier account | The free Happier Cloud, or your own relay |
-| A Claude Pro/Max subscription | You log in once, from the Happier app, see step 3 |
+| A Claude Pro/Max subscription | A token in the add-on configuration, or a one-time `/login`, see step 3 |
 
 ## Setup
 
@@ -45,17 +45,25 @@ If you added the MCP integration after starting the add-on, restart the add-on.
 
 - **Happier.** Click **Connect Happier** and scan the QR code with the Happier
   app, or approve it in the browser. The daemon starts by itself.
-- **Claude.** In the Happier app, start a session on this machine. When it
-  says Claude is not logged in, use Happier's option to log in: it opens a
-  terminal on this machine. Run `/login` there and finish the sign-in. The
-  login is stored on the add-on's volume (`/data/claude`), so you do this once.
-  It survives restarts and updates.
+- **Claude.** Pick one:
+  - **Token (no terminal).** On any computer where Claude Code is logged in,
+    run `claude setup-token`. Paste the token into the add-on's
+    **Configuration → Claude token**, save, and restart the add-on. It lasts
+    about a year. When it expires, generate a new one and replace it.
+  - **`/login` from Happier.** In the Happier app, start a session on this
+    machine. When it says Claude is not logged in, use Happier's option to
+    log in. That opens a terminal on this machine. Run `/login` there and finish
+    the sign-in. The login is stored on the add-on's volume (`/data/claude`)
+    and survives restarts and updates.
+
+  If both are set, the token wins.
 - **Home Assistant tools.** This turns green when step 1 worked.
 
 ## Options
 
 | Option | Default | |
 |---|---|---|
+| Claude token | blank = use `/login` | Long-lived token from `claude setup-token`. Masked in the UI |
 | Happier relay URL | blank = Happier Cloud | Your own relay. The add-on container must be able to reach it. |
 | Happier web app URL | same as relay | Only for relays whose web app lives at a different URL |
 
@@ -81,7 +89,10 @@ not of this add-on.
   command without asking, with root access to your HA config, the add-on's
   `/data` and the Supervisor API. Default or Safe YOLO keep approvals on.
 - Nothing is exposed on your LAN. The setup page answers only HA ingress.
-- Secrets live only on the add-on's volume (`/data`), never in the image.
+- Secrets live only on the add-on's volume (`/data`) and in its options,
+  never in the image. A Claude token in the configuration is part of the
+  add-on's options, so it is included in Home Assistant backups. If a backup
+  leaks, revoke the token at claude.ai (Settings → Claude Code).
 
 ## Troubleshooting
 

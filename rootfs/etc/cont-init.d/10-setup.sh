@@ -23,6 +23,18 @@ else
   bashio::log.info "Happier relay: Happier Cloud"
 fi
 
+# ── Claude token ─────────────────────────────────────────────────────────────
+# The token itself is exported only by the happier service. Here we leave a
+# presence-only marker for the setup page, and catch an obvious bad paste
+# without ever writing the value anywhere.
+rm -f /run/happier/claude_token_configured
+if bashio::config.has_value 'claude_token'; then
+  touch /run/happier/claude_token_configured
+  if [[ "$(bashio::config 'claude_token' | tr -d '[:space:]')" != sk-ant-* ]]; then
+    bashio::log.warning "The Claude token does not look like a 'claude setup-token' token (sk-ant-…). Sessions may fail to log in."
+  fi
+fi
+
 # ── Home Assistant MCP server ────────────────────────────────────────────────
 # HA's built-in "Model Context Protocol Server" integration, reached through
 # the Supervisor's Core proxy with this add-on's own token. No long-lived

@@ -1,4 +1,10 @@
 configuration:
+  claude_token:
+    name: Claude token
+    description: >-
+      Optional. A long-lived token from `claude setup-token`, run on any
+      computer where Claude Code is logged in. Valid for about a year. Leave
+      blank to log in with /login from a Happier terminal instead.
   relay_url:
     name: Happier relay URL
     description: >-

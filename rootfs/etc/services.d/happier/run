@@ -22,5 +22,24 @@ cd /root || exit 1
 # permission mode is still chosen per session in the Happier app.
 export IS_SANDBOX=1
 
+# Claude login, option 1: a long-lived token from `claude setup-token`, set
+# in the add-on configuration. Happier passes CLAUDE_* variables from the
+# daemon's environment to every Claude session, and Claude Code prefers this
+# over a /login stored in /data/claude. Exported to this process only (never
+# on a command line, never logged), so the setup page and cont-init never see
+# it. Whitespace is stripped because a pasted token often carries a newline.
+CLAUDE_TOKEN=""
+if bashio::config.has_value 'claude_token'; then
+  CLAUDE_TOKEN="$(bashio::config 'claude_token' | tr -d '[:space:]')"
+fi
+if [[ -n "${CLAUDE_TOKEN}" ]]; then
+  export CLAUDE_CODE_OAUTH_TOKEN="${CLAUDE_TOKEN}"
+  bashio::log.info "Claude: using the token from the add-on configuration."
+else
+  unset CLAUDE_CODE_OAUTH_TOKEN
+  bashio::log.info "Claude: no token configured; sessions use the /login stored in /data/claude."
+fi
+unset CLAUDE_TOKEN
+
 bashio::log.info "Starting the Happier daemon."
 exec /app/happier.sh daemon start-sync
